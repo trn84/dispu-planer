@@ -1,0 +1,43 @@
+# ============================================
+# KONFIGURATION FÜR PRÜFUNGSPLANUNG
+# ============================================
+
+# Parameter für die Datengenerierung
+generation:
+  num_students: 200
+  num_professors: 80
+  
+  # Steuert die Bildung von Clustern. Ein höherer Wert erzeugt weniger, aber
+  # stärkere "Arbeitsgruppen" von Professoren, die häufig zusammen prüfen.
+  # Ein Wert von 1 entspricht einer fast zufälligen Verteilung. Empfehlung: 3-5.
+  avg_joint_exams: 4
+  
+  # NEU: Steuert die "Varianz" bzw. Streuung der Paarungen.
+  # Gibt an, wie viel Prozent der Prüfungen aus den gebildeten Arbeitsgruppen kommen sollen.
+  # 1.0 = Keine Varianz, alle Prüfungen kommen aus den Clustern.
+  # 0.7 = 70% aus Clustern, 30% sind zufällige "Ausreißer" (hohe Varianz).
+  # 0.0 = Reine Zufallsverteilung, keine Cluster.
+  cluster_strength: 0.1
+
+# Rahmenbedingungen für die Planung
+constraints:
+  num_days: 3
+  num_rooms: 8
+  exam_duration_minutes: 45
+  pause_between_exams_minutes: 15
+  start_of_day: "09:00"
+  end_of_day: "20:00"
+
+# Ausgabedateien
+files:
+  exam_data_csv: "pruefungsdaten.csv"
+  schedule_output_csv: "optimierter_pruefungsplan.csv"
+  workload_plot: "professoren_auslastung.png"
+  pairs_plot: "professoren_paare.html"
+  gantt_chart_plot: "optimierter_plan_interaktiv.html"
+
+# Einstellungen für den Optimierungs-Algorithmus
+optimization:
+  weight_active_days: 480 
+  weight_prof_pair_locality: 10 
+  solver_time_limit_seconds: 30
