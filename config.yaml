@@ -30,11 +30,11 @@ constraints:
 
 # Ausgabedateien
 files:
-  exam_data_csv: "pruefungsdaten.csv"
-  schedule_output_csv: "optimierter_pruefungsplan.csv"
-  workload_plot: "professoren_auslastung.png"
-  pairs_plot: "professoren_paare.html"
-  gantt_chart_plot: "optimierter_plan_interaktiv.html"
+  exam_data_csv: "input/pruefungsdaten.csv"
+  schedule_output_csv: "output/optimierter_pruefungsplan.csv"
+  workload_plot: "output/professoren_auslastung.png"
+  pairs_plot: "output/professoren_paare.html"
+  gantt_chart_plot: "output/optimierter_plan_interaktiv.html"
 
 # Einstellungen für den Optimierungs-Algorithmus
 optimization:
