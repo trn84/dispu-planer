@@ -1,6 +1,6 @@
 # Optimierungs-Tool für die Prüfungsplanung
 
-Dieses Projekt bietet eine komplette Lösung zur Erstellung, Optimierung und Visualisierung von Prüfungsplänen (z.B. für Disputationen von Bachelor- oder Masterarbeiten). Es nutzt **Google OR-Tools**, einen mächtigen Constraint-Solver, um einen Plan zu erstellen, der eine Reihe von harten und weichen Randbedingungen erfüllt.
+Dieses Projekt bietet eine komplette Lösung zur Erstellung, Optimierung und Visualisierung von Prüfungsplänen (z.B. für Disputationen von Bachelor- oder Masterarbeiten). Es nutzt **Google OR-Tools**, einen mächtigen Constraint-Solver (CP-SAT), um einen Plan zu erstellen, der eine Reihe von harten und weichen Randbedingungen erfüllt.
 
 Das primäre Ziel ist es, den Verwaltungsaufwand zu minimieren und den Komfort für die beteiligten Professoren zu maximieren, indem ihre Prüfungsblöcke gebündelt werden.
 
@@ -53,6 +53,8 @@ pip install -r requirements.txt
 ## ⚙️ Anwendung
 
 Der Prozess besteht aus drei einfachen Schritten:
+
+### Schritt 0: Prozedere siehe ![Anleitung zur Optimierung](anleitung_optimierung.md)
 
 ### Schritt 1: Konfiguration anpassen (optional)
 

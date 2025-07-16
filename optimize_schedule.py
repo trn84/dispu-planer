@@ -5,6 +5,7 @@ import itertools
 import visualize 
 import time
 
+## Helper-Klasse für die Callback-Funktion
 class ObjectiveCallback(cp_model.CpSolverSolutionCallback):
     def __init__(self, objective_var):
         cp_model.CpSolverSolutionCallback.__init__(self)
@@ -22,6 +23,7 @@ class ObjectiveCallback(cp_model.CpSolverSolutionCallback):
     def solution_count(self):
         return self.__solution_count
 
+## Hauptfunktion zur Ausführung der Optimierung
 def run_optimization(config_path='config.yaml'):
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
@@ -42,10 +44,12 @@ def run_optimization(config_path='config.yaml'):
     all_rooms = list(range(constraints_cfg['num_rooms']))
     all_days = list(range(constraints_cfg['num_days']))
 
+    ## 1. Erstellen des CP-SAT-Modells
     model = cp_model.CpModel()
 
     starts, ends, days, rooms, intervals = {}, {}, {}, {}, {}
 
+    ## 2. Erstellen der Variablen für Startzeit, Endzeit, Tag und Raum für jede Prüfung im CP-SAT-Modell
     for exam_id in all_exams:
         starts[exam_id] = model.NewIntVar(0, total_duration_min, f"start_{exam_id}")
         ends[exam_id] = model.NewIntVar(0, total_duration_min, f"end_{exam_id}")
@@ -55,6 +59,8 @@ def run_optimization(config_path='config.yaml'):
             starts[exam_id], constraints_cfg['exam_duration_minutes'], ends[exam_id], f"interval_{exam_id}"
         )
 
+    ## 3. Hinzufügen der harten Randbedingungen
+    # a) Überprüfung der Zeitfenster für Prüfungen
     slot_duration = constraints_cfg['exam_duration_minutes'] + constraints_cfg['pause_between_exams_minutes']
     for room in all_rooms:
         room_intervals = []
@@ -69,15 +75,18 @@ def run_optimization(config_path='config.yaml'):
             room_intervals.append(buffered_interval)
         model.AddNoOverlap(room_intervals)
 
+    # b) Überprüfung der Zeitfenster für Professoren
     for prof in all_profs:
         prof_exams = df_exams[(df_exams['prof_1'] == prof) | (df_exams['prof_2'] == prof)]['exam_id'].tolist()
         model.AddNoOverlap([intervals[ex_id] for ex_id in prof_exams])
 
+    # c) Überprüfung der Zeitfenster für Studierende
     for exam_id in all_exams:
         start_in_day = model.NewIntVar(0, day_duration_min, f"start_in_day_{exam_id}")
         model.Add(starts[exam_id] == days[exam_id] * day_duration_min + start_in_day)
         model.Add(start_in_day <= day_duration_min - constraints_cfg['exam_duration_minutes'])
 
+    # d) Überprüfung der maximalen Prüfungen pro Tag
     prof_active_days = []
     for prof in all_profs:
         for day in all_days:
@@ -93,8 +102,11 @@ def run_optimization(config_path='config.yaml'):
             model.AddBoolOr(exams_on_this_day).OnlyEnforceIf(is_active)
             model.Add(sum(exams_on_this_day) == 0).OnlyEnforceIf(is_active.Not())
             
+    ## 4. Hinzufügen der weichen Randbedingungen
+    # a) Minimierung der aktiven Tage für Professoren
     total_active_days_cost = sum(prof_active_days) * opt_params['weight_active_days']
     
+    # b) Minimierung der Lokalität der Professorenpaare
     locality_costs = []
     if opt_params.get('weight_prof_pair_locality', 0) > 0:
         df_exams['prof_pair'] = df_exams.apply(lambda row: tuple(sorted((row['prof_1'], row['prof_2']))), axis=1)
@@ -116,18 +128,22 @@ def run_optimization(config_path='config.yaml'):
 
     total_locality_cost = sum(locality_costs) * opt_params.get('weight_prof_pair_locality', 0)
     
+    ## 5. Minimierung der Gesamtkosten
     total_objective = model.NewIntVar(0, 100000000, 'total_objective')
     model.Add(total_objective == total_active_days_cost + total_locality_cost)
     model.Minimize(total_objective)
 
+    ## 6. Lösen des Modells
+    print("Starte Optimierung...")
+    print(f"Maximale Laufzeit: {opt_params['solver_time_limit_seconds']} Sekunden")
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = float(opt_params['solver_time_limit_seconds'])
     
     solution_callback = ObjectiveCallback(total_objective)
     status = solver.Solve(model, solution_callback)
 
+    ## 7. Verarbeiten der Ergebnisse
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        # ... (Rest des Codes bleibt gleich)
         print(f"\nSuche beendet. {solution_callback.solution_count()} Lösungen gefunden. Beste Lösung wird verwendet.")
         print(f"Finaler Status: {solver.StatusName(status)}")
         schedule = []

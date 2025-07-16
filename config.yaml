@@ -17,7 +17,7 @@ generation:
   # 1.0 = Keine Varianz, alle Prüfungen kommen aus den Clustern.
   # 0.7 = 70% aus Clustern, 30% sind zufällige "Ausreißer" (hohe Varianz).
   # 0.0 = Reine Zufallsverteilung, keine Cluster.
-  cluster_strength: 0.1
+  cluster_strength: 0.6
 
 # Rahmenbedingungen für die Planung
 constraints:
@@ -38,6 +38,6 @@ files:
 
 # Einstellungen für den Optimierungs-Algorithmus
 optimization:
-  weight_active_days: 480 
-  weight_prof_pair_locality: 10 
-  solver_time_limit_seconds: 30
+  weight_active_days: 1000 
+  weight_prof_pair_locality: 100 
+  solver_time_limit_seconds: 180

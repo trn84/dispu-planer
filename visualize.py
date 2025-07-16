@@ -73,10 +73,7 @@ def plot_prof_pairs(df_exams, filename='professoren_paare.html'):
     
     options = """
     {
-        "nodes": {
-            "borderWidth": 2, "borderWidthSelected": 4,
-            "color": { "border": "#222222", "background": "#666666", "highlight": { "border": "#FFFFFF", "background": "#D3913B" }, "hover": { "border": "#FFFFFF", "background": "#888888" } }
-        },
+        "nodes": { "borderWidth": 2, "borderWidthSelected": 4, "color": { "border": "#222222", "background": "#666666", "highlight": { "border": "#FFFFFF", "background": "#D3913B" }, "hover": { "border": "#FFFFFF", "background": "#888888" } } },
         "edges": { "color": { "highlight": "#D3913B", "hover": "#888888", "inherit": false }, "smooth": false },
         "interaction": { "hover": true, "hoverConnectedEdges": true, "multiselect": true, "navigationButtons": true, "tooltipDelay": 200 },
         "physics": { "barnesHut": { "gravitationalConstant": -30000, "centralGravity": 0.1, "springLength": 250, "springConstant": 0.05, "damping": 0.09, "avoidOverlap": 0.1 }, "minVelocity": 0.75, "solver": "barnesHut" }
@@ -95,61 +92,56 @@ def plot_schedule_gantt(df_schedule, config, filename='optimierter_plan_interakt
     
     constraints_cfg = config['constraints']
     
-    # 1. Daten für Plotly vorbereiten
     df_plot = df_schedule.copy()
     
-    # Erstelle echte Start- und End-Datetime-Objekte
     base_date = datetime.now().date()
     df_plot['start_datetime'] = df_plot.apply(
-        lambda row: datetime.combine(
-            base_date + timedelta(days=row['Tag']-1),
-            datetime.strptime(row['Startzeit'], '%H:%M').time()
-        ), axis=1
+        lambda row: datetime.combine(base_date + timedelta(days=row['Tag']-1), datetime.strptime(row['Startzeit'], '%H:%M').time()), axis=1
     )
     df_plot['end_datetime'] = df_plot['start_datetime'] + timedelta(minutes=constraints_cfg['exam_duration_minutes'])
     
-    # Formatiere die Spalten für Plotly
     df_plot['Raum'] = 'Raum ' + df_plot['Raum'].astype(str)
     
-    # Erstelle eine saubere, textuelle Repräsentation des Prüferpaares für die Legende
     df_plot['prof_pair_str'] = df_plot.apply(
-        lambda row: f"{row['Prüfer 1'].replace('Prof. Dr. ', '')} & {row['Prüfer 2'].replace('Prof. Dr. ', '')}",
-        axis=1
+        lambda row: f"{row['Prüfer 1'].replace('Prof. Dr. ', '')} & {row['Prüfer 2'].replace('Prof. Dr. ', '')}", axis=1
     )
     
-    # Erstelle den Text, der beim Hovern angezeigt wird
     df_plot['hover_text'] = df_plot.apply(
-        lambda row: f"<b>{row['Student']}</b><br>Prüfer: {row['prof_pair_str']}<br>Zeit: {row['Startzeit']}",
-        axis=1
+        lambda row: f"<b>{row['Student']}</b><br>Prüfer: {row['prof_pair_str']}<br>Zeit: {row['Startzeit']}", axis=1
     )
     
-    # 2. Erstelle die interaktive Grafik
+    ### START DER KORREKTUR: Eindeutige Farbzuweisung ###
+    # 1. Finde alle einzigartigen Professorenpaare
+    unique_pairs = df_plot['prof_pair_str'].unique()
+    
+    # 2. Erzeuge eine deterministische, einzigartige Farbe für jedes Paar
+    random.seed(42) # Wichtig, damit die Farben bei jedem Lauf gleich bleiben!
+    color_map = {
+        pair: f'#{random.randint(0, 0xFFFFFF):06x}' for pair in unique_pairs
+    }
+    
+    # 3. Erstelle die interaktive Grafik mit der expliziten Farb-Map
     fig = px.timeline(
         df_plot,
         x_start="start_datetime",
         x_end="end_datetime",
         y="Raum",
-        color="prof_pair_str", # Färbe nach dem eindeutigen Professorenpaar
-        hover_name="hover_text", # Zeige diesen Text beim Hovern an
-        title="Interaktiver Prüfungsplan"
+        color="prof_pair_str",
+        hover_name="hover_text",
+        title="Interaktiver Prüfungsplan",
+        color_discrete_map=color_map # Dies ist die entscheidende Anweisung!
     )
+    ### ENDE DER KORREKTUR ###
 
-    # 3. Passe das Layout für eine bessere Übersicht an
     fig.update_layout(
-        template="plotly_dark", # Dunkles Theme passt gut
+        template="plotly_dark",
         xaxis_title="Zeit",
         yaxis_title="Prüfungsraum",
         legend_title_text='Prüfer-Paare',
-        font=dict(
-            family="Arial, sans-serif",
-            size=12,
-            color="white"
-        )
+        font=dict(family="Arial, sans-serif", size=12, color="white")
     )
     
-    # Sorge dafür, dass Raum 1 oben ist
     fig.update_yaxes(autorange="reversed")
     
-    # Speichere die Grafik als eigenständige HTML-Datei
     fig.write_html(filename)
     print(f"Interaktives Gantt-Diagramm gespeichert unter: {filename}")
