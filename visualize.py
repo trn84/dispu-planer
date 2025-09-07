@@ -80,7 +80,10 @@ def plot_prof_pairs(df_exams, filename='professoren_paare.html'):
     }
     """
     nt.set_options(options)
-    nt.save_graph(filename)
+    # Fix Unicode encoding issue by writing HTML with UTF-8 encoding
+    html_content = nt.generate_html()
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(html_content)
     print(f"Interaktives Netzwerkdiagramm gespeichert unter: {filename}")
 
 

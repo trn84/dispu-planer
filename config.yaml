@@ -28,6 +28,12 @@ constraints:
   start_of_day: "09:00"
   end_of_day: "20:00"
 
+# Einstellungen für den Optimierungs-Algorithmus
+optimization:
+  weight_active_days: 1000 
+  weight_prof_pair_locality: 100 
+  solver_time_limit_seconds: 180
+
 # Ausgabedateien
 files:
   exam_data_csv: "input/pruefungsdaten.csv"
@@ -35,9 +41,3 @@ files:
   workload_plot: "output/professoren_auslastung.png"
   pairs_plot: "output/professoren_paare.html"
   gantt_chart_plot: "output/optimierter_plan_interaktiv.html"
-
-# Einstellungen für den Optimierungs-Algorithmus
-optimization:
-  weight_active_days: 1000 
-  weight_prof_pair_locality: 100 
-  solver_time_limit_seconds: 180
